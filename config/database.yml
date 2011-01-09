@@ -1,0 +1,17 @@
+development:
+  adapter: postgresql
+  encoding: unicode
+  database: accounting_101_development
+  min_messages: warning
+  pool: 5
+  username: kevin
+  password:
+
+test:
+  adapter: sqlite3
+  encoding: unicode
+  database: db/test.sqlite3
+  min_messages: warning
+  pool: 5
+  username: 
+  password:

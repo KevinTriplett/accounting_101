@@ -1,0 +1,81 @@
+WIKI stuff:
+h2. <a name="part1">1. ACCOUNTING SYSTEM IMPLEMENTATION</a>
+
+This system is bare bones and doesn't need the features of a full accounting system (reconcile, batch entry, automation). Minimal styling for now.
+
+h3. Summary
+
+This is a general purpose, basic accounting system for logging transactions and assigning debits and credits to accounts. It is based on the established industry standard principles for dual-entry accounting system.
+
+h3. Schema
+
+
+
+h3. Scope
+
+Where CRUD = Create Read Update Delete
+
+# CRU Postings (no D, immutable)
+# CRUD Accounts
+# CRUD Journals
+# List Accounts
+# List child Accounts, grouped by Account
+# List Journals, grouped by Account
+# List Postings, grouped by Journal, grouped by Account
+# Filter Journals by description, memo, total (credit | debit)
+# Filter Accounts by number, name, description, type_of_account
+# Sort Journals by accounts, description, memo, created_at, updated_at, total (credit | debit)
+# Sort Accounts by number, name, description, type_of_account
+
+h3. User Interface
+
+The views at this early phase should be minimal for development while still working as an accounting system.
+
+List views should include:
+
+# Accounts
+## list of Accounts
+## each Account row should be expandable to list Journals
+## each Journal row should be expandable to list Postings
+# Account
+## list of Journals for an Account
+### created_at
+### description
+### memo
+## each Journal row should be expandable to list Postings
+
+
+The grid will show all Posting records, optionally filtered by Account (where only posting records associated with that account are shown).
+
+Each row will have a "Subgrid":http://www.trirand.com/jqgridwiki/doku.php?id=wiki:subgrid (or "Subgrid as Grid":http://www.trirand.com/jqgridwiki/doku.php?id=wiki:subgrid_as_grid) showing all Postings associated with the owning Journal with the following columns:
+
+* @posting.account.number@
+* @posting.account.name@
+* @posting.amount@
+
+Features of jqGrid I love are:
+* "Toolbar Searching":http://www.trirand.com/jqgridwiki/doku.php?id=wiki:toolbar_searching
+* column re-ordering (set "sortable" option true)
+* dynamic pagination (scroll option)
+* "Column Hiding":http://www.trirand.com/jqgridwiki/doku.php?id=wiki:show_hide_columns.
+
+For data entry, I would like a form below the grid (I do not like modal dialog forms) to create and update a Journal of Posting records ("Form Editing feature":http://www.trirand.com/jqgridwiki/doku.php?id=wiki:form_editing, GridToForm function). I would also like the ability to click on a cell in any existing posting row and have that cell open up for editing (inline "Cell Editing":http://www.trirand.com/jqgridwiki/doku.php?id=wiki:cell_editing feature).
+
+h3. Research
+
+Online resources from which I based my design:
+
+"Double Entry Accounting in Rails":http://www.cuppadev.co.uk/dev/double-entry-accounting-in-rails/
+James discusses his initial confusions around some fundamental terms in accounting. I want to use the standard accounting definitions of "credit" and "debit" -- which are backwards to the what I thought they meant. He references this next article, which I also found helpful in straightening out my confusion (see the 2nd paragraph of the section titled +*BATCH ENTRY*+):
+
+"Double Entry Accounting in a Relational Database":http://homepages.tcp.co.uk/~m-wigley/gc_wp_ded.html
+I liked this article and incorporated its recommendations (except for the batch part). The immutability is good, I want to eventually have immutable postings with corrections being made by adding new postings to a journal. I really like how posts belong to journals and how posts should be rolled back if they can't all be committed. I also like that posts should not be modified after being committed and should have new posts added to the journal to make any modifications. Oh wait, I already said that.
+
+"Bookkeeper, a more complex double entry accounting system implemented in Rails":http://github.com/papercavalier/bookkeeper
+I don't like the complexity of this system but I -plundered- borrowed some ideas from it for our models. There may be some other ideas we can glean from it.
+
+"Here's another double entry accounting system that appears to be dead":http://github.com/russellkt/ledgeroo
+This is another complex system that might have some ideas we can -plunder- borrow from it, but probably not.
+
+"The gist of double entry accounting systems where I found Bookkeeper and Ledgeroo":http://gist.github.com/raw/264266/d2da2804df353816e7a8ddd92ee75d43eb4cc89b/rails_accounting_projects.textile
+A lot of these systems are too general or not implemented well, IMHO. I don't recommend chasing these leads down.

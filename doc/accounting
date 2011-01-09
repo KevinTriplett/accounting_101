@@ -1,0 +1,19 @@
+Accounting System
+
+This is a double-entry accounting system. This system is included in the reservation system so that it easily integrates with contract payments. However, it may make more sense to separate it into its own process, both for security and maintenance reasons.
+
+TABLES
+
+Accounts
+The traditional account, with many subaccounts. Accounts can belong to users.
+
+Postings
+A credit or debit into or out of an account. Whether it's a credit or debit depends upon the account.
+
+Journals
+Groups postings into transactions. All postings associated with a journal must sum to zero.
+
+Reference "double-entry account system" blog posting at:
+http://www.cuppadev.co.uk/oldbrew/double-entry-accounting-in-rails/
+and
+http://homepages.tcp.co.uk/~m-wigley/gc_wp_ded.html

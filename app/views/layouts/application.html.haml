@@ -1,0 +1,17 @@
+!!! 5
+%html
+  %head
+    %title= "Accounting 101 - " + (yield(:title) || 'Basic Accounting')
+    = yield :head
+    - if protect_against_forgery?
+      = javascript_tag "window._auth_token_name = '#{request_forgery_protection_token}'; window._auth_token = '#{form_authenticity_token}'"
+  %body
+    #page
+      #header
+        = render :partial => 'shared/header'
+      #content-wrapper
+        #content
+          = render :partial => 'shared/flash', :locals => {:flash => flash}
+          = yield
+      #footer
+        = render :partial => 'shared/footer'

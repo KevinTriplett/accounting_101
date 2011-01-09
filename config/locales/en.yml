@@ -1,0 +1,15 @@
+# Sample localization file for English. Add more files in this directory for other locales.
+# See http://github.com/svenfuchs/rails-i18n/tree/master/rails%2Flocale for starting points.
+
+en:
+  flash:
+    actions:
+      create:
+        notice: "{{resource_name}} was successfully created"
+        alert:  "{{resource_name}} could not be created"
+      update:
+        notice: "{{resource_name}} was successfully updated"
+        alert:  "{{resource_name}} could not be updated"
+      destroy:
+        notice: "{{resource_name}} was succesfully deleted"
+        alert:  "{{resource_name}} could not be deleted"
