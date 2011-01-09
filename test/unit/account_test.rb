@@ -4,6 +4,7 @@ class AccountTest < ActiveSupport::TestCase
 
   should belong_to :type_of_account
   should have_many :postings
+  should have_many :journals
   should have_many :subaccounts
   should belong_to :parent
 

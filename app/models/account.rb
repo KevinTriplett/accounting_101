@@ -6,6 +6,7 @@ class Account < ActiveRecord::Base
   has_many :subaccounts, :class_name => 'Account', :foreign_key => 'account_id'
 
   has_many :postings
+  has_many :journals, :through => :postings
 
   validates_presence_of :name
   validates_uniqueness_of :name, :case_sensitive => false
