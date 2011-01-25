@@ -1,17 +1,44 @@
 Accounting System
 
-This is a double-entry accounting system. This system is included in the reservation system so that it easily integrates with contract payments. However, it may make more sense to separate it into its own process, both for security and maintenance reasons.
+This is a double-entry accounting system. This system ultimately will be included in the resource scheduling system so that it easily tracks contract invoices and payments. It is being made into a gem first so that others may use it in their applications.
+
 
 TABLES
 
 Accounts
-The traditional account, with many subaccounts. Accounts can belong to users.
+An Account has_many Accounts as subaccounts. An Account has_many Journals.
 
 Postings
-A credit or debit into or out of an account. Whether it's a credit or debit depends upon the account.
+Postings belong_to an Account and belong_to a Journal. A Posting represents either a credit or a debit for an account.
 
 Journals
-Groups postings into transactions. All postings associated with a journal must sum to zero.
+A Journal has_many Postings. All postings associated with a journal must sum to zero.
+
+Batches
+A Batch has_many Journals. A Batch controls the immutability of Postings associated with Journals. A Batch record can be open or closed. When a Journal is created, it will associate itself (belong_to) the first open Batch it can find. If no Batches are open, a new Batch is created, opened and the Journal now belongs to that Batch.
+
+Reconciles
+A Reconcile record belongs to an Account and to a Posting. Initially, Reconcile records belong only to an Account but then belong to a Posting when that Reconcile is associated to a Posting. The relation between Reconcile and Posting is a HABTM so that a Reconcile can have many Postings and a Posting can have many Reconciles. This allows a Reconcile record to be made up of many Postings and vice-versa.
+(MORE TO COME)
+
+
+FEATURES AND CAPABILITIES
+
+Journals should balance (the sum of associated Postings should equal zero) before saving. Postings may only be updated if the Journal they belong to has an associated Batch.
+
+Postings should indicate one of three states: uncleared, cleared and reconciled.
+
+Reconciling an account involves the association of Reconciles with Postings and vice-versa. Ideally, the system may auto-associate Reconciles with Postings based on amounts and transaction dates.
+
+
+INTERFACE TO APPLICATIONS
+
+The accounting system may receive input from an application. That input should be traceable back to a specific model record in the application. Therefore, a polymorphic association column should be added to both Postings and Accounts. That way, a Posting may be traced back to one record in the application (for example, a contract, a contract_line_item, a timecard or a transaction) and an Account may be traced back to another record in a different model (for example, a user, an entity, a piece of equipment).
+
+The application may require information from the accounting system (for example, the balance on an account, the individual payments for a contract).
+
+
+MORE INFORMATION
 
 Reference "double-entry account system" blog posting at:
 http://www.cuppadev.co.uk/oldbrew/double-entry-accounting-in-rails/
