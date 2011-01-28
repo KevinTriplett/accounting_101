@@ -7,7 +7,7 @@ class Batch < ActiveRecord::Base
   aasm_initial_state :opened
 
   aasm_state :opened
-  aasm_state :closed
+  aasm_state :closed, :enter => :do_close
   aasm_state :reopened
 
   aasm_event :reopen do
@@ -16,5 +16,14 @@ class Batch < ActiveRecord::Base
 
   aasm_event :close do
     transitions :to => :closed, :from => [:opened,:reopened]
+  end
+
+  def do_close
+    self.journals.each do |journal|
+      journal.postings.each do |posting|
+        posting.state = "cleared"
+        posting.save
+      end
+    end
   end
 end

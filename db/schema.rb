@@ -40,6 +40,7 @@ ActiveRecord::Schema.define(:version => 20110108192847) do
     t.integer  "account_id",                                                       :null => false
     t.integer  "journal_id",                                                       :null => false
     t.integer  "type_of_asset_id",                                                 :null => false
+    t.string   "state"
     t.string   "memo"
     t.decimal  "amount",           :precision => 15, :scale => 2, :default => 0.0
     t.date     "transacted_on"

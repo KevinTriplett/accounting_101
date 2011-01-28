@@ -193,6 +193,16 @@ describe Posting do
        @posting1.save!
        end
     end
+    it "posting in cleared state" do
+       assert_raises Posting::UpdateNotAllow do
+       @batch1 = Batch.generate
+       @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
+       @posting1 = Posting.spawn(:amount => 1.00, :memo => "test")
+       @journal1.postings << @posting1
+       @posting1.state = "cleared"
+       @posting1.save!
+       end
+    end
   end
 
   context "posting should be created if " do

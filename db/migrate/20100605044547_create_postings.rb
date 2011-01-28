@@ -4,7 +4,8 @@ class CreatePostings < ActiveRecord::Migration
       t.belongs_to :account, :null => false
       t.belongs_to :journal, :null => false
       t.belongs_to :type_of_asset, :null => false
-
+      
+      t.string  :state
       t.string  :memo
       t.decimal :amount, :precision => 15, :scale => 2, :default => 0
       t.date    :transacted_on

@@ -1,5 +1,6 @@
 class Posting < ActiveRecord::Base
   class UpdateNotAllow < RuntimeError; end
+  include AASM
   belongs_to :account
   belongs_to :journal
   belongs_to :type_of_asset
@@ -11,7 +12,24 @@ class Posting < ActiveRecord::Base
 
   after_create :initialize_transacted_on
 
-  before_validation_on_update :check_batch
+  before_validation(:check_batch, :on => :update)
+  
+
+  aasm_column :state
+  aasm_initial_state :uncleared
+
+  aasm_state :uncleared
+  aasm_state :cleared
+  aasm_state :reconciled
+
+  aasm_event :clear do
+    transitions :to => :cleared, :from => :uncleared
+  end
+
+  aasm_event :reconcile do
+    transitions :to => :reconciled, :from => :cleared
+  end
+
 
   scope :debit, where('amount > 0')
   scope :credit, where('amount < 0')
@@ -32,15 +50,15 @@ class Posting < ActiveRecord::Base
     where(account_id ? ["account_id = ?", account_id] : nil)
   end
 
-private
+  private
 
   def initialize_transacted_on
     update_attribute(:transacted_on, journal.created_at) if transacted_on.nil?
   end
 
   def check_batch
-    #if batch closed then not allowed for update
-    if self.journal.batch.state == "closed"
+    #if batch closed then not allowed for update and posting should not be cleared and reconciled
+    if self.journal.batch.state == "closed" || self.state !=  "uncleared"
       raise Posting::UpdateNotAllow
     end
   end
