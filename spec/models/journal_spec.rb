@@ -44,16 +44,16 @@ describe Journal do
       @posting_3.account = @account_c
       @posting_4.account = @account_c
 
-      @journal_1 = Journal.spawn
+      @journal_1 = Journal.generate(:description => "funding", :batch_id => 1)
       @journal_1.postings << @posting_1
       @journal_1.postings << @posting_2
       @journal_1.postings << @posting_3
 
-      @journal_2 = Journal.spawn
+      @journal_2 = Journal.generate(:description => "transfer", :batch_id => 1)
       @journal_2.postings << @posting_1
       @journal_2.postings << @posting_2
 
-      @journal_3 = Journal.spawn
+      @journal_3 = Journal.generate(:description => "funding", :batch_id => 1)
       @journal_3.postings << @posting_3
       @journal_3.postings << @posting_4
 
@@ -94,11 +94,11 @@ describe Journal do
       @posting_3.account = @account_c
       @posting_4.account = @account_c
       @posting_5.account = @account_b
+      @journal = Journal.generate(:description => "transfer", :batch_id => 1)
     end
 
     it "validate postings that balance" do
       assert_nothing_raised do
-        @journal = Journal.spawn
         @journal.postings << @posting_1
         @journal.postings << @posting_2
         @journal.postings << @posting_3
@@ -108,7 +108,6 @@ describe Journal do
 
     it "do not validate postings that do not balance" do
       assert_raises(ActiveRecord::RecordInvalid, "postings do not sum to zero") do
-        @journal = Journal.spawn
         @journal.postings << @posting_1
         @journal.postings << @posting_2
         @journal.save!
@@ -145,11 +144,11 @@ describe Journal do
       @a3.postings << @p5CR
       @a2.postings << @p5DR
 
-      @j1 = Journal.spawn(:description => "journal 1")
-      @j2 = Journal.spawn(:description => "journal 2")
-      @j3 = Journal.spawn(:description => "journal 3")
-      @j4 = Journal.spawn(:description => "journal 4")
-      @j5 = Journal.spawn(:description => "journal 5")
+      @j1 = Journal.spawn(:description => "journal 1", :batch_id => 1)
+      @j2 = Journal.spawn(:description => "journal 2", :batch_id => 1)
+      @j3 = Journal.spawn(:description => "journal 3", :batch_id => 1)
+      @j4 = Journal.spawn(:description => "journal 4", :batch_id => 1)
+      @j5 = Journal.spawn(:description => "journal 5", :batch_id => 1)
 
       @j1.postings << @p1CR
       @j1.postings << @p1DR

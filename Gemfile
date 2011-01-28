@@ -7,7 +7,7 @@ gem 'rails', '3.0.3'
 
 # model-related
 gem 'pg'
-
+gem 'aasm'
 # controller-related
 gem 'inherited_resources', '1.1.2'
 gem 'has_scope'

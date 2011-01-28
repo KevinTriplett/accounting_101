@@ -2,6 +2,7 @@ GEM
   remote: http://rubygems.org/
   remote: http://gems.github.com/
   specs:
+    aasm (2.2.0)
     abstract (1.0.0)
     actionmailer (3.0.3)
       actionpack (= 3.0.3)
@@ -146,6 +147,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  aasm
   admin_data
   apotomo
   capistrano

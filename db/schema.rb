@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(:version => 20110108192847) do
   end
 
   create_table "batches", :force => true do |t|
+    t.string   "state"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

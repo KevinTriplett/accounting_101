@@ -5,7 +5,7 @@ def posting_attributes
     :account_id => 123,
     :journal_id => 1,
     :type_of_asset_id => 1,
-    :amount => "10"
+    :amount => 10.1
   }
 end
 
@@ -104,14 +104,10 @@ describe Posting do
 
   context "after_create" do
     it "default transacted_on attribute to journal.created_at" do
-      pretend_now_is(Time.local(2010,"jul",5,9)) do
-        @journal = Journal.generate
-      end
-      pretend_now_is(Time.local(2012,"aug",2,9)) do
+        @journal = Journal.generate(:description => "funding", :batch_id => 1)
         @posting_1 = Posting.spawn(:amount =>  1.00, :transacted_on => nil)
         @journal.postings << @posting_1
         assert_equal Date.parse(@journal.created_at.to_s), Date.parse(@posting_1.transacted_on.to_s)
-      end
     end
   end
 
@@ -184,4 +180,54 @@ describe Posting do
     end
   end
 
+  context "posting can't be update if " do
+    it "batch has closed" do
+       assert_raises Posting::UpdateNotAllow do
+       @batch1 = Batch.generate
+       @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
+       @posting1 = Posting.spawn(:amount => 1.00, :memo => "test")
+       @journal1.postings << @posting1
+       @batch1.state = "closed"
+       @batch1.save!
+       @posting1.amount = 10.00
+       @posting1.save!
+       end
+    end
+  end
+
+  context "posting should be created if " do
+    it "batch has closed" do
+       @batch1 = Batch.generate
+       @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
+       @batch1.state = "closed"
+       @batch1.save!
+       @posting1 = Posting.spawn(:amount => 1.00, :memo => "test",:journal_id => @journal1.id)
+       @posting1.should be_valid
+    end
+  end
+  context "batch in reopened state then" do
+    before(:each) do
+       @b = Batch.generate
+       @b.state = "reopened"
+       @b.save!
+    end
+    it "add new posting" do
+       @j = Journal.generate(:description => "funding", :batch_id => @b)
+       @p = Posting.spawn(:amount => 1.00, :memo => "test")
+       @j.postings << @p
+    end
+    it "update a posting" do
+       @j = Journal.generate(:description => "funding", :batch_id => @b)
+       @p = Posting.spawn(:amount => 1.00, :memo => "test")
+       @j.postings << @p
+       @p.amount = 10.00
+       @p.save!
+    end
+    it "delete a posting" do
+       @j = Journal.generate(:description => "funding", :batch_id => @b)
+       @p = Posting.spawn(:amount => 1.00, :memo => "test")
+       @j.postings << @p
+       @p.destroy
+    end
+  end
 end
