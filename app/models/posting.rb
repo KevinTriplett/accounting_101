@@ -11,9 +11,8 @@ class Posting < ActiveRecord::Base
   attr_accessible :amount, :transacted_on
 
   after_create :initialize_transacted_on
-
-  before_validation(:check_batch, :on => :update)
   
+  before_validation(:check_batch, :on => :update)
 
   aasm_column :state
   aasm_initial_state :uncleared
@@ -30,6 +29,10 @@ class Posting < ActiveRecord::Base
     transitions :to => :reconciled, :from => :cleared
   end
 
+  aasm_event :unclear do
+    transitions :to => :uncleared, :from => :reconciled, :guard => Proc.new { |p| p.journal.batch.state != "closed"}
+    transitions :to => :uncleared, :from => :cleared
+  end
 
   scope :debit, where('amount > 0')
   scope :credit, where('amount < 0')
@@ -57,9 +60,10 @@ class Posting < ActiveRecord::Base
   end
 
   def check_batch
-    #if batch closed then not allowed for update and posting should not be cleared and reconciled
-    if self.journal.batch.state == "closed" || self.state !=  "uncleared"
+    #if batch closed then not allowed for update
+    if self.journal.batch.state == "closed"
       raise Posting::UpdateNotAllow
     end
   end
+
 end

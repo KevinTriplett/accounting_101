@@ -180,28 +180,70 @@ describe Posting do
     end
   end
 
-  context "posting can't be update if " do
-    it "batch has closed" do
-       assert_raises Posting::UpdateNotAllow do
+  context "posting should be change from cleared " do
+    it "to reconciled" do
        @batch1 = Batch.generate
        @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
-       @posting1 = Posting.spawn(:amount => 1.00, :memo => "test")
+       @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "cleared")
        @journal1.postings << @posting1
-       @batch1.state = "closed"
-       @batch1.save!
-       @posting1.amount = 10.00
-       @posting1.save!
-       end
+       @posting1.reconcile!
+       @posting1.should be_valid 
     end
-    it "posting in cleared state" do
-       assert_raises Posting::UpdateNotAllow do
+    it "to uncleared" do
+       @batch1 = Batch.generate
+       @journal2 = Journal.generate(:description => "funding", :batch_id => @batch1)
+       @posting2 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "cleared")
+       @journal2.postings << @posting2
+       @posting2.unclear!
+       @posting2.should be_valid 
+    end
+  end
+
+  context "posting should be change from uncleared " do
+    it "to cleared" do
        @batch1 = Batch.generate
        @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
        @posting1 = Posting.spawn(:amount => 1.00, :memo => "test")
        @journal1.postings << @posting1
-       @posting1.state = "cleared"
-       @posting1.save!
-       end
+       @posting1.clear!
+       @posting1.should be_valid 
+    end
+  end
+
+  context "posting should be change from reconciled" do
+    it "to uncleared if batch is opened" do
+       @batch1 = Batch.generate
+       @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
+       @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
+       @journal1.postings << @posting1
+       @posting1.unclear!
+       @posting1.should be_valid 
+    end
+    it "to uncleared if batch is reopened" do
+       @batch1 = Batch.generate
+       @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
+       @batch1.state = "reopened"
+       @batch1.save!
+       @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
+       @journal1.postings << @posting1
+       @posting1.unclear!
+       @posting1.should be_valid 
+    end
+  end
+
+  context "posting should not be change from reconciled" do
+    it "to uncleared if batch is closed" do
+      assert_raises Posting::UpdateNotAllow do
+       @batch1 = Batch.generate
+       @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
+       @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
+       @journal1.postings << @posting1
+       @batch1 =  @journal1.batch
+       @batch1.state = "closed"
+       @batch1.save
+       @posting1.unclear!
+       @posting1.should_not be_valid 
+      end
     end
   end
 
