@@ -1,0 +1,17 @@
+Reconcile feature
+
+Every month, the business receives a statement from their bank.
+
+The business must compare that statement with an account.
+
+This is called reconciling an account with the statement.
+
+The user compares each entry on the statement and locates that same entry in the postings. The user changes the posting state from uncleared to cleared. Since the user might make a mistake and "clear" the wrong posting, he needs to be able to change the posting state back to uncleared.
+
+When all the postings from the statement are marked cleared in the account, the statement is reconciled and the user completes the reconcile process and clicks a button, changing the state of all cleared postings to reconciled.
+
+The reconcile process is begun by entering the ending balance from the statement. Knowing the ending balance allows the application to display the process using the following equation:
+
+  difference = account beginning balance - statement ending balance - sum(cleared postings)
+
+The account beginning balance is the sum of all reconciled postings. Postings that are uncleared are omitted from the above equation.
