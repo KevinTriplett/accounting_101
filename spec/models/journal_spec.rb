@@ -118,6 +118,7 @@ describe Journal do
   #same copy form unit test for understanding
   context "all journals class method" do
     before(:each) do
+      @batch = Batch.generate
       @a1 = Account.generate(:name => "account 1")
       @a2 = Account.generate(:name => "account 2")
       @a3 = Account.generate(:name => "account 3")
@@ -144,11 +145,17 @@ describe Journal do
       @a3.postings << @p5CR
       @a2.postings << @p5DR
 
-      @j1 = Journal.spawn(:description => "journal 1", :batch_id => 1)
-      @j2 = Journal.spawn(:description => "journal 2", :batch_id => 1)
-      @j3 = Journal.spawn(:description => "journal 3", :batch_id => 1)
-      @j4 = Journal.spawn(:description => "journal 4", :batch_id => 1)
-      @j5 = Journal.spawn(:description => "journal 5", :batch_id => 1)
+      @j1 = Journal.spawn(:description => "journal 1", :batch_id => @batch.id)
+      @j2 = Journal.spawn(:description => "journal 2", :batch_id => @batch.id)
+      @j3 = Journal.spawn(:description => "journal 3", :batch_id => @batch.id)
+      @j4 = Journal.spawn(:description => "journal 4", :batch_id => @batch.id)
+      @j5 = Journal.spawn(:description => "journal 5", :batch_id => @batch.id)
+
+      @j1.save!
+      @j2.save!
+      @j3.save!
+      @j4.save!
+      @j5.save!
 
       @j1.postings << @p1CR
       @j1.postings << @p1DR
@@ -161,11 +168,6 @@ describe Journal do
       @j5.postings << @p5CR
       @j5.postings << @p5DR
 
-      @j1.save!
-      @j2.save!
-      @j3.save!
-      @j4.save!
-      @j5.save!
 
       @a1.save!
       @a2.save!
@@ -177,6 +179,7 @@ describe Journal do
     end
 
     it "return all journals filtered" do
+      assert_equal [@j1, @j3, @j4].map(&:description).to_set, Journal.all_journals(@a1.id).map(&:description).to_set
       assert_equal [@j1, @j3, @j4].map(&:description).to_set, Journal.all_journals(@a1.id).map(&:description).to_set
     end
   end

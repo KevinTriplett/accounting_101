@@ -1,5 +1,4 @@
 class Posting < ActiveRecord::Base
-  class UpdateNotAllow < RuntimeError; end
   include AASM
   belongs_to :account
   belongs_to :journal
@@ -12,7 +11,8 @@ class Posting < ActiveRecord::Base
 
   after_create :initialize_transacted_on
   
-  before_validation(:check_batch, :on => :update)
+  before_validation(:check_batch_for_update, :on => :update)
+  before_destroy :check_batch_for_delete
 
   aasm_column :state
   aasm_initial_state :uncleared
@@ -59,10 +59,17 @@ class Posting < ActiveRecord::Base
     update_attribute(:transacted_on, journal.created_at) if transacted_on.nil?
   end
 
-  def check_batch
+  def check_batch_for_update
     #if batch closed then not allowed for update
     if self.journal.batch.state == "closed"
-      raise Posting::UpdateNotAllow
+      errors.add( :message,"Posting updation not allowed.")
+    end
+  end
+
+  def check_batch_for_delete
+    #if batch closed then not allowed for to delete posting
+    if self.journal.batch.state == "closed"
+      return false
     end
   end
 

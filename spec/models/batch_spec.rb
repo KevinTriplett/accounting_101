@@ -1,24 +1,40 @@
 require 'spec_helper'
-
 describe Batch do
   context "Batch Should be" do
     it "created in opened state" do
       @b = Batch.generate
       assert_equal @b.state, "opened"
     end
-    
-    it "assign to journal when creating" do
-      @b = Batch.generate
-      @j = Journal.generate(:description => "funding", :batch_id => @b)
-      assert_equal @j.batch.state, "opened"
+  end
+
+  context "Assign opened batch" do
+    before(:each) do
+      @batch = Batch.generate
+    end
+
+    it "when journal created" do
+      @journal = Journal.new
+      @journal.description = "funding"
+      @journal.save
+      assert_equal @journal.batch.state, @batch.state
     end
   end
+
+  context "If no batch opened and journal created then" do
+    it "batch should be created in opened state" do
+      @journal = Journal.new
+      @journal.description = "funding"
+      @journal.save
+      assert_equal @journal.batch.state, "opened"
+    end
+  end
+
 
   context "batch should be change from" do
     it "opened to closed" do
       @batch1 = Batch.generate
       @batch1.close!
-      @batch1.should be_valid
+      @batch1.state.should == "closed"
     end
     
     it "reopened to closed" do
@@ -26,7 +42,7 @@ describe Batch do
       @batch1.state = "reopened"
       @batch1.save!
       @batch1.close!
-      @batch1.should be_valid
+      @batch1.state.should == "closed"
     end
 
     it "closed to reopened" do
@@ -34,7 +50,7 @@ describe Batch do
       @batch1.state = "closed"
       @batch1.save!
       @batch1.reopen!
-      @batch1.should be_valid
+      @batch1.state.should == "reopened"
     end
   end
 
@@ -64,19 +80,42 @@ describe Batch do
     end
   end
 
-  context "posting should not be updated" do
-    it "if batch is closed" do
-      assert_raises Posting::UpdateNotAllow do
-        @batch1 = Batch.generate
-        @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
-        @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
-        @journal1.postings << @posting1
-        @batch1 =  @journal1.batch
-        @batch1.state = "closed"
-        @batch1.save
-        @posting1.unclear!
-        @posting1.should_not be_valid
-      end
+  context "batch is closed then " do
+    it "posting should be added to journal" do
+      @batch1 = Batch.generate
+      @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
+      @batch1 =  @journal1.batch
+      @batch1.state = "closed"
+      @batch1.save
+      @posting1 = Posting.new 
+      @posting1.amount = 1.00
+      @posting1.memo = "test"
+      @posting1.journal_id = @journal1.id
+      @posting1.type_of_asset_id = 1
+      @posting1.account_id = 1
+      @posting1.should be_valid
+    end
+    it "posting should not be updated" do
+      @batch1 = Batch.generate
+      @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
+      @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
+      @journal1.postings << @posting1
+      @batch1 =  @journal1.batch
+      @batch1.state = "closed"
+      @batch1.save
+      @posting1.unclear!
+      assert_equal @posting1.state, "reconciled"
+    end
+    it "posting should not be deleted" do
+      @batch1 = Batch.generate
+      @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
+      @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
+      @journal1.postings << @posting1
+      @batch1 =  @journal1.batch
+      @batch1.state = "closed"
+      @batch1.save
+      @posting1.destroy
+      @posting1.should_not == nil
     end
   end
 end

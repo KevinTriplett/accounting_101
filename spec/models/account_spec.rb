@@ -157,6 +157,9 @@ describe "Account" do
 
   context "#all_postings" do
     before(:each) do
+      @batch = Batch.generate
+      @journal1 = Journal.generate(:description => "funding1", :batch_id => @batch.id)
+      @journal2 = Journal.generate(:description => "funding2", :batch_id => @batch.id)
       @account_1 = Account.generate(:name => "account 1")
       @account_2 = Account.generate(:name => "account 2")
       @account_3 = Account.generate(:name => "account 3")
@@ -164,6 +167,12 @@ describe "Account" do
       @posting_2 = Posting.generate(:amount => "2.00")
       @posting_3 = Posting.generate(:amount => "3.00")
       @posting_4 = Posting.generate(:amount => "4.00")
+
+      @journal1.postings << @posting_1
+      @journal1.postings << @posting_2
+      @journal2.postings << @posting_3
+      @journal2.postings << @posting_4
+
       @account_1.postings << @posting_1
       @account_2.postings << @posting_2
       @account_3.postings << @posting_3

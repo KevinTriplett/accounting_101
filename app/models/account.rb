@@ -8,7 +8,7 @@ class Account < ActiveRecord::Base
   has_many :postings
   has_many :journals, :through => :postings
 
-  validates_presence_of :name
+  validates_presence_of :name, :type_of_account_id
   validates_uniqueness_of :name, :case_sensitive => false
 
   attr_accessible :name, :description, :number, :type_of_account, :balance, :limit, :warning

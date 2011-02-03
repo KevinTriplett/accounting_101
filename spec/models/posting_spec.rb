@@ -187,7 +187,7 @@ describe Posting do
        @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "cleared")
        @journal1.postings << @posting1
        @posting1.reconcile!
-       @posting1.should be_valid 
+       @posting1.state.should == "reconciled"
     end
     it "to uncleared" do
        @batch1 = Batch.generate
@@ -195,7 +195,7 @@ describe Posting do
        @posting2 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "cleared")
        @journal2.postings << @posting2
        @posting2.unclear!
-       @posting2.should be_valid 
+       @posting2.state.should == "uncleared"
     end
   end
 
@@ -206,7 +206,7 @@ describe Posting do
        @posting1 = Posting.spawn(:amount => 1.00, :memo => "test")
        @journal1.postings << @posting1
        @posting1.clear!
-       @posting1.should be_valid 
+       @posting1.state.should == "cleared"
     end
   end
 
@@ -217,7 +217,7 @@ describe Posting do
        @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
        @journal1.postings << @posting1
        @posting1.unclear!
-       @posting1.should be_valid 
+       @posting1.state.should == "uncleared"
     end
     it "to uncleared if batch is reopened" do
        @batch1 = Batch.generate
@@ -227,13 +227,12 @@ describe Posting do
        @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
        @journal1.postings << @posting1
        @posting1.unclear!
-       @posting1.should be_valid 
+       @posting1.state.should == "uncleared"
     end
   end
 
   context "posting should not be change from reconciled" do
     it "to uncleared if batch is closed" do
-      assert_raises Posting::UpdateNotAllow do
        @batch1 = Batch.generate
        @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
        @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
@@ -242,8 +241,7 @@ describe Posting do
        @batch1.state = "closed"
        @batch1.save
        @posting1.unclear!
-       @posting1.should_not be_valid 
-      end
+       @posting1.state.should == "reconciled"
     end
   end
 
