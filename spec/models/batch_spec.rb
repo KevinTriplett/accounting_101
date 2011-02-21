@@ -15,17 +15,20 @@ describe Batch do
     it "when journal created" do
       @journal = Journal.new
       @journal.description = "funding"
-      @journal.save
-      assert_equal @journal.batch.state, @batch.state
+      @journal.save!
+      assert_equal @journal.batch, @batch
     end
   end
 
   context "If no batch opened and journal created then" do
     it "batch should be created in opened state" do
+      @batch = Batch.generate
+      @batch.close!
       @journal = Journal.new
       @journal.description = "funding"
-      @journal.save
+      @journal.save!
       assert_equal @journal.batch.state, "opened"
+      assert_not_equal @journal.batch, @batch
     end
   end
 
@@ -66,14 +69,14 @@ describe Batch do
       @j.postings << @p
     end
     it "update a posting" do
-      @j = Journal.generate(:description => "funding", :batch_id => @b)
+      @j = Journal.generate!(:description => "funding", :batch_id => @b)
       @p = Posting.spawn(:amount => 1.00, :memo => "test")
       @j.postings << @p
       @p.amount = 10.00
       @p.save!
     end
     it "delete a posting" do
-      @j = Journal.generate(:description => "funding", :batch_id => @b)
+      @j = Journal.generate!(:description => "funding", :batch_id => @b)
       @p = Posting.spawn(:amount => 1.00, :memo => "test")
       @j.postings << @p
       @p.destroy
@@ -82,11 +85,11 @@ describe Batch do
 
   context "batch is closed then " do
     it "posting should be added to journal" do
-      @batch1 = Batch.generate
+      @batch1 = Batch.generate!
       @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
       @batch1 =  @journal1.batch
       @batch1.state = "closed"
-      @batch1.save
+      @batch1.save!
       @posting1 = Posting.new 
       @posting1.amount = 1.00
       @posting1.memo = "test"
@@ -96,26 +99,41 @@ describe Batch do
       @posting1.should be_valid
     end
     it "posting should not be updated" do
-      @batch1 = Batch.generate
-      @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
+      @batch1 = Batch.generate!
+      @journal1 = Journal.generate!(:description => "funding", :batch_id => @batch1)
       @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
       @journal1.postings << @posting1
       @batch1 =  @journal1.batch
       @batch1.state = "closed"
-      @batch1.save
+      @batch1.save!
       @posting1.unclear!
       assert_equal @posting1.state, "reconciled"
     end
+
+    it "posting should not be updated even amount change" do
+      @batch1 = Batch.generate!
+      @journal1 = Journal.generate!(:description => "funding", :batch_id => @batch1)
+      @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
+      @journal1.postings << @posting1
+      @batch1 =  @journal1.batch
+      @batch1.close!
+      @posting1.amount = 2.00
+      @posting1.save
+      @find_post = Posting.find(@posting1.id)
+      assert_not_equal @find_post.amount.to_f, 2.00
+    end
+
     it "posting should not be deleted" do
-      @batch1 = Batch.generate
+      @batch1 = Batch.generate!
       @journal1 = Journal.generate(:description => "funding", :batch_id => @batch1)
       @posting1 = Posting.spawn(:amount => 1.00, :memo => "test", :state => "reconciled")
       @journal1.postings << @posting1
       @batch1 =  @journal1.batch
       @batch1.state = "closed"
-      @batch1.save
+      @batch1.save!
       @posting1.destroy
-      @posting1.should_not == nil
+      @find_post = Posting.find(@posting1.id) 
+      @find_post.should_not == nil
     end
   end
 end

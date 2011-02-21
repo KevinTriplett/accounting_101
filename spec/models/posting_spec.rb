@@ -3,7 +3,7 @@ require 'spec_helper'
 def posting_attributes
   {
     :account_id => 123,
-    :journal_id => 1,
+    :journal_id => Journal.create!(:description => "funding").id,
     :type_of_asset_id => 1,
     :amount => 10.1
   }
@@ -53,11 +53,8 @@ describe Posting do
   end   
 
   context "validations" do
-    before(:each) do
-      @posting = Posting.spawn
-    end
-
     it "not allow zero amounts" do
+      @posting.attributes = posting_attributes
       @posting.amount = 0.00
       assert_raises ActiveRecord::RecordInvalid do
         @posting.save!
@@ -65,6 +62,7 @@ describe Posting do
     end
 
     it "allow negative amounts" do
+      @posting.attributes = posting_attributes
       @posting.amount = -1.00
       assert_nothing_raised do
         @posting.save!
@@ -72,6 +70,7 @@ describe Posting do
     end
 
     it "allow positive amounts" do
+      @posting.attributes = posting_attributes
       @posting.amount = 1.00
       assert_nothing_raised do
         @posting.save!

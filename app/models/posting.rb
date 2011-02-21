@@ -4,10 +4,11 @@ class Posting < ActiveRecord::Base
   belongs_to :journal
   belongs_to :type_of_asset
 
+  validates_presence_of :account_id, :journal_id, :type_of_asset_id
   validates_numericality_of :amount
   validates_exclusion_of :amount, :in => [0]
 
-  attr_accessible :amount, :transacted_on
+  attr_accessible :amount, :transacted_on, :account_id, :journal_id, :type_of_asset_id
 
   after_create :initialize_transacted_on
   
