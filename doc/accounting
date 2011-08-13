@@ -3,6 +3,36 @@ Accounting System
 This is a double-entry accounting system. This system ultimately will be included in the resource scheduling system so that it easily tracks contract invoices and payments. It is being made into a gem first so that others may use it in their applications.
 
 
+DEBIT/CREDIT EQUATION
+
+Normal Debit Balance Accounts = Normal Credit Balance Accounts
+Assets + Draws + Expenses = Liabilities + Beginning Capital + Revenue
+This looks totally bizarre unless you look at the equation as a historical record of the business. The current assets plus what was taken out of those assets (draws and expenses) equals what was owed to other people (liabilities) plus what was originally contributed (beginning capital) plus any income that came in (revenue).
+
+This equation can be rewritten:
+0 = Liabilities + Beginning Capital + Revenue - (Assets + Draws + Expenses)
+0 = Liabilities + Beginning Capital + Revenue - Assets - Draws - Expenses
+
+So if we store the amounts correctly in the database, we can easily check the integrity of the database by summing all amounts and testing for zero.
+
+To "store the amounts correctly in the database," we make sure that the amounts for all postings belonging to a journal sum to zero before committing those postings to the database. It seems to follow that:
+
+First Account     Second Account
+===============   ===============
+debit account     debit account
+(+)               (-)
+
+credit account    credit account
+(+)               (-)
+
+debit account     credit account
+(+)               (+)
+
+credit account    debit account
+(+)               (+)
+
+
+
 TABLES
 
 Accounts
