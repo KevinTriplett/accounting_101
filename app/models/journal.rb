@@ -1,43 +1,30 @@
+class BalancedValidator < ActiveModel::EachValidator
+  def validate_each(record, attribute, value)
+    record.errors[attribute] << "must sum to zero" unless record.balanced?
+  end
+end
+
 class Journal < ActiveRecord::Base
 
-  has_many :postings
-  has_many :accounts, :through => :postings
-  belongs_to :batch
+  has_many :postings, :autosave => true
 
-  validates_presence_of :description, :batch_id
+  validates :description, :presence => true
   validates_associated :postings
-
-  # TODO: validate postings are balanced
-  class BalancedValidator < ActiveModel::EachValidator
-    def validate_each(record, attribute, value)
-      record.errors[attribute] << "must sum to zero" unless record.postings_are_balanced?
-    end
-  end
-
   validates :postings, :balanced => true
 
-  attr_accessible :description, :memo, :batch_id
-  before_validation :assign_batch
+  attr_accessible :description
 
-  def postings_are_balanced?
+  accepts_nested_attributes_for :postings, :allow_destroy => true, :reject_if => proc {|attrs| attrs['amount'].blank?}
+
+  def journal(desc, posts)
+    journal = Journal.new(:description => desc)
+    posts.each do |post|
+      journal.postings.build(:amount => post.amount, :memo => post.memo, :account_id => post.account_id)
+    end
+    journal.save!
+  end
+
+  def balanced?
     0 == postings.inject(0) {|sum, posting| sum += posting.amount}
   end
-
-  def self.all_journals(account_id = nil)
-    # TODO: why is the :joins clause necessary here? shouldn't it be automatic with the :conditions clause?
-    joins(:postings).where(account_id ? ["postings.account_id = ?", account_id] : nil)
-  end
-  
-  private
-
-  def assign_batch
-    batch = Batch.find_by_state("opened")
-    if batch.blank?
-      #create new batch if no batch in open state
-      self.batch = Batch.create
-    else
-      self.batch = batch
-    end
-  end
-
 end

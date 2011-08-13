@@ -4,7 +4,7 @@ development:
   database: accounting_101_development
   min_messages: warning
   pool: 5
-  username: kevin
+  username: kevintriplett
   password:
 
 test:

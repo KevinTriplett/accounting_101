@@ -1,7 +1,7 @@
 class CreateAccounts < ActiveRecord::Migration
   def self.up
     create_table :accounts do |t|
-      t.belongs_to :account, :null => true
+      t.integer :parent_id, :null => true
       t.belongs_to :type_of_account, :null => false
 
       t.integer :number

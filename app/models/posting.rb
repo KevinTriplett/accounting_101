@@ -1,20 +1,20 @@
+require 'ruby-debug'
+
 class Posting < ActiveRecord::Base
+
   include AASM
+
   belongs_to :account
   belongs_to :journal
   belongs_to :type_of_asset
 
-  validates_presence_of :account_id, :journal_id, :type_of_asset_id
   validates_numericality_of :amount
   validates_exclusion_of :amount, :in => [0]
 
-  attr_accessible :amount, :transacted_on, :account_id, :journal_id, :type_of_asset_id
+  # attr_accessible :amount, :transacted_on, :type_of_asset_id, :account_id, :journal_id
 
-  after_create :initialize_transacted_on
+  around_create :initialize_transacted_on_and_conversion
   
-  before_validation(:check_batch_for_update, :on => :update)
-  before_destroy :check_batch_for_delete
-
   aasm_column :state
   aasm_initial_state :uncleared
 
@@ -31,47 +31,23 @@ class Posting < ActiveRecord::Base
   end
 
   aasm_event :unclear do
-    transitions :to => :uncleared, :from => :reconciled, :guard => Proc.new { |p| p.journal.batch.state != "closed"}
+    transitions :to => :uncleared, :from => :reconciled
     transitions :to => :uncleared, :from => :cleared
   end
-
-  scope :debit, where('amount > 0')
-  scope :credit, where('amount < 0')
 
   def account_name
     account.name
   end
 
-  def debit?
-    amount > 0
+  def amount
+    (conversion * read_attribute(:amount)).round(2)
   end
 
-  def credit?
-    amount < 0
+private
+
+  def initialize_transacted_on_and_conversion
+    self.conversion = type_of_asset.conversion unless type_of_asset_id.nil?
+    yield
+    update_attribute(:transacted_on, created_at) if transacted_on.nil?
   end
-
-  def self.all_postings(account_id = nil)
-    where(account_id ? ["account_id = ?", account_id] : nil)
-  end
-
-  private
-
-  def initialize_transacted_on
-    update_attribute(:transacted_on, journal.created_at) if transacted_on.nil?
-  end
-
-  def check_batch_for_update
-    #if batch closed then not allowed for update
-    if self.journal.batch.state == "closed"
-      errors.add( :message,"Posting updation not allowed.")
-    end
-  end
-
-  def check_batch_for_delete
-    #if batch closed then not allowed for to delete posting
-    if self.journal.batch.state == "closed"
-      return false
-    end
-  end
-
 end

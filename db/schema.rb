@@ -13,7 +13,7 @@
 ActiveRecord::Schema.define(:version => 20110108192847) do
 
   create_table "accounts", :force => true do |t|
-    t.integer  "account_id"
+    t.integer  "parent_id"
     t.integer  "type_of_account_id",                 :null => false
     t.integer  "number"
     t.string   "name",               :default => ""
@@ -22,16 +22,8 @@ ActiveRecord::Schema.define(:version => 20110108192847) do
     t.datetime "updated_at"
   end
 
-  create_table "batches", :force => true do |t|
-    t.string   "state"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
   create_table "journals", :force => true do |t|
-    t.integer  "batch_id"
     t.string   "description", :default => ""
-    t.string   "memo"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -39,23 +31,24 @@ ActiveRecord::Schema.define(:version => 20110108192847) do
   create_table "postings", :force => true do |t|
     t.integer  "account_id",                                                       :null => false
     t.integer  "journal_id",                                                       :null => false
-    t.integer  "type_of_asset_id",                                                 :null => false
+    t.integer  "type_of_asset_id"
     t.string   "state"
     t.string   "memo"
     t.decimal  "amount",           :precision => 15, :scale => 2, :default => 0.0
+    t.decimal  "conversion",       :precision => 9,  :scale => 2, :default => 1.0
     t.date     "transacted_on"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
   create_table "type_of_accounts", :force => true do |t|
-    t.string "name"
-    t.string "description"
+    t.string  "name",  :default => ""
+    t.boolean "debit", :default => true
   end
 
   create_table "type_of_assets", :force => true do |t|
-    t.string "name",        :default => ""
-    t.string "description"
+    t.string  "name",                                     :default => ""
+    t.decimal "conversion", :precision => 9, :scale => 2
   end
 
 end

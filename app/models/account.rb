@@ -2,18 +2,48 @@ class Account < ActiveRecord::Base
   class OrphanPostings < RuntimeError; end
 
   belongs_to :type_of_account
-  belongs_to :parent, :class_name => 'Account', :foreign_key => 'account_id'
-  has_many :subaccounts, :class_name => 'Account', :foreign_key => 'account_id'
+  belongs_to :parent, :class_name => 'Account', :foreign_key => 'parent_id'
+  has_many   :subaccounts, :class_name => 'Account', :foreign_key => 'parent_id'
+  has_many   :postings
+  has_many   :journals, :through => :postings
 
-  has_many :postings
-  has_many :journals, :through => :postings
+  delegate :debit, :to => :type_of_account
 
-  validates_presence_of :name, :type_of_account_id
-  validates_uniqueness_of :name, :case_sensitive => false
+  validates :name, :presence => true
+  validates :name, :uniqueness => {:case_sensitive => false}
 
   attr_accessible :name, :description, :number, :type_of_account, :balance, :limit, :warning
 
   before_destroy :cannot_orphan_postings
+
+  def debit_account?
+    type_of_account.debit
+  end
+
+  def credit_account?
+    !type_of_account.debit
+  end
+
+  # record a transaction between accounts
+  # +amount+:: the amount being entered between this accounts and a second account or
+  #            (eventually) split entries creates an array of amounts, one for each secondary account
+  #            and total is the sum of all amounts
+  # +secondary+:: second account for double entry or
+  #               (eventually) split entries creates an array of multiple secondary accounts
+  # +description+:: description for journal, either new or to modify existing journal description
+  # +journal+:: optional Journal reference if editing an existing Journal
+  # returns Journal object, whether new or existing (mainly for specs)
+  def post(amount, secondary, description, journal=nil)
+    journal ||= Journal.new
+    journal.description = description
+
+    reverse = !(self.debit ^ secondary.debit)
+
+    journal.postings << self.postings.build(:amount => amount)
+    journal.postings << secondary.postings.build(:amount => (reverse ? -amount : amount))
+    journal.save!
+    journal
+  end
 
   def ancestors
     parent ? ([parent] + parent.ancestors).flatten : []
