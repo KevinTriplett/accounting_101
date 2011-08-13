@@ -7,10 +7,18 @@
 ENV["WATCHR"] = "1"
 system 'clear'
 
-def growl(message)
+def growl_test(message)
   growlnotify = `which growlnotify`.chomp
   title = "Watchr Test Results"
   image = message.include?('0 failures, 0 errors') ? "~/.watchr_images/passed.png" : "~/.watchr_images/failed.png"
+  options = "-w -n Watchr --image '#{File.expand_path(image)}' -m '#{message}' '#{title}'"
+  system %(#{growlnotify} #{options} &)
+end
+
+def growl_spec(message)
+  growlnotify = `which growlnotify`.chomp
+  title = "Watchr Test Results"
+  image = message.include?('0 failures') ? "~/.watchr_images/passed.png" : "~/.watchr_images/failed.png"
   options = "-w -n Watchr --image '#{File.expand_path(image)}' -m '#{message}' '#{title}'"
   system %(#{growlnotify} #{options} &)
 end
@@ -23,7 +31,16 @@ end
 def run_test_file(file)
   system('clear')
   result = run(%Q(ruby -I"lib:test" -rubygems #{file}))
-  growl result.split("\n")[-2] rescue nil
+  growl_test result.split("\n")[-2] rescue nil
+  puts result
+end
+
+def run_spec_file(file)
+  system('clear')
+  # system "bundle exec rspec #{file}"
+  # result = run(%Q(ruby -I"lib:rspec" -rubygems #{file}))
+  result = run(%Q(bundle exec rspec #{file}))
+  growl_spec result.split("\n")[-1] rescue nil
   puts result
 end
 
@@ -43,14 +60,20 @@ def related_test_files(path)
   Dir['test/**/*.rb'].select { |file| file =~ /#{File.basename(path).split(".").first}_test.rb/ }
 end
 
+def related_spec_files(path)
+  Dir['spec/**/*.rb'].select { |file| file =~ /#{File.basename(path).split(".").first}_spec.rb/ }
+end
+
 def run_suite
   run_all_tests
   run_all_features
 end
 
 watch('test/test_helper\.rb') { run_all_tests }
-watch('test/.*/.*_test\.rb') { |m| run_test_file(m[0]) }
-watch('app/.*/.*\.rb') { |m| related_test_files(m[0]).map {|tf| run_test_file(tf) } }
+watch('spec/.*/.*_spec\.rb') { |m| run_spec_file(m[0]) }
+# watch('test/.*/.*_test\.rb') { |m| run_test_file(m[0]) }
+watch('app/.*/.*\.rb') { |m| related_spec_files(m[0]).map {|tf| run_spec_file(tf) } }
+# watch('app/.*/.*\.rb') { |m| related_test_files(m[0]).map {|tf| run_test_file(tf) } }
 watch('features/.*/.*\.feature') { run_all_features }
 
 # Ctrl-\
