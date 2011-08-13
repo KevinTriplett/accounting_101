@@ -41,7 +41,7 @@ group :test do
   gem 'time-warp'
   gem 'rcov'
   gem 'shoulda'
-  gem 'rspec-rails', '2.0.0.beta.12'
+  gem 'rspec-rails'
   gem 'test-unit', '~> 2.0'
   gem 'sqlite3-ruby'
 end
