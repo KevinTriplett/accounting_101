@@ -18,7 +18,7 @@ end
 def growl_spec(message)
   growlnotify = `which growlnotify`.chomp
   title = "Watchr Test Results"
-  image = message.include?('0 failures') ? "~/.watchr_images/passed.png" : "~/.watchr_images/failed.png"
+  image = message.include?(' 0 failures') ? "~/.watchr_images/passed.png" : "~/.watchr_images/failed.png"
   options = "-w -n Watchr --image '#{File.expand_path(image)}' -m '#{message}' '#{title}'"
   system %(#{growlnotify} #{options} &)
 end
