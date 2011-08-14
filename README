@@ -1,1 +1,7 @@
-Dual-entry accounting system for ultimate extraction to a gem or use as standalone, bare-bones, no-frills accounting system.
+Double-entry accounting system, bare-bones, no-frills, work in progress.
+
+Rails 3 compatibility only.
+
+Currently, no views, only models.
+
+See doc/account for more information.
