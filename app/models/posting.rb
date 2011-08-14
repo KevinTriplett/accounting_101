@@ -40,13 +40,13 @@ class Posting < ActiveRecord::Base
   end
 
   def amount
-    (conversion * read_attribute(:amount)).round(2)
+    (conversion * (read_attribute(:amount) || 0)).round(2)
   end
 
 private
 
   def initialize_transacted_on_and_conversion
-    self.conversion = type_of_asset.conversion unless type_of_asset_id.nil?
+    self.conversion = type_of_asset.conversion unless type_of_asset.nil?
     yield
     update_attribute(:transacted_on, created_at) if transacted_on.nil?
   end

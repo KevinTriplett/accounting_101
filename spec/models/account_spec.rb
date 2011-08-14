@@ -1,80 +1,62 @@
 require 'spec_helper'
 
-def account_attributes
-  {
-    :name => "account_1", 
-    :description => "description of account",
-    :type_of_account_id => 123
-  }
-end
-
-def type_of_account_attributes
-  {
-    :name => "asset",
-    :debit => true
-  }
-end
-
 describe "Account" do
-
-  before(:each) do
-    @account = Account.new
-    @type_of_account = TypeOfAccount.new     
-  end
-
   context "should not be created if" do
     it "account name is blank" do
-      @account.attributes = account_attributes.except(:name)
-      @account.save # save! will raise error
-      @account.should have(1).error_on(:name)
-      @account.should_not be_valid
+      account = Account.spawn(:name => "")
+      account.should_not be_valid
+      account.should have(1).error_on(:name)
+      assert_raises ActiveRecord::RecordInvalid do
+        account.save!
+      end
+    end
+
+    it "account name is nil" do
+      account = Account.spawn(:name => nil)
+      account.should_not be_valid
+      account.should have(1).error_on(:name)
+      assert_raises ActiveRecord::RecordInvalid do
+        account.save!
+      end
     end
 
     it "account name is not unique" do
-      @account.attributes = account_attributes.except(:type_of_account_id)
-      @type_of_account.attributes = type_of_account_attributes
-      @type_of_account.save!
-      @account.type_of_account_id = @type_of_account.id
-      @account.save!
-      @account_2 = Account.new
-      @account_2.attributes = account_attributes.except(:type_of_account_id)
-      @account_2.type_of_account_id = @type_of_account.id
-      @account_2.should have(1).error_on(:name)
-      @account_2.should_not be_valid
+      account = Account.generate!(:name => "account duplicate")
+      account_dup = Account.spawn(:name => "account duplicate")
+      account_dup.should_not be_valid
+      account_dup.should have(1).error_on(:name)
+      assert_raises ActiveRecord::RecordInvalid do
+        account_dup.save!
+      end
     end
 
-    it "account name is not unique case insensitive" do
-      @account.attributes = account_attributes
-      @type_of_account.attributes = type_of_account_attributes
-      @type_of_account.save!
-      @account.type_of_account_id = @type_of_account.id
-      @account.save!
-      @account_2 = Account.new
-      @account_2.attributes = account_attributes.except(:name)
-      @account_2.name = "Account_1"
-      @account_2.type_of_account_id = @type_of_account.id
-      @account_2.should have(1).error_on(:name)
-      @account_2.should_not be_valid
+    it "account name is not unique, case insensitive" do
+      account = Account.generate!(:name => "account duplicate")
+      account_dup = Account.spawn(:name => "Account duplicate")
+      account_dup.should_not be_valid
+      account_dup.should have(1).error_on(:name)
+      assert_raises ActiveRecord::RecordInvalid do
+        account_dup.save!
+      end
     end
   end
 
   context "should be created if" do
-    it "all details are entered" do
-      @account.attributes = account_attributes.except(:name)
-      @account.name = "1234"
-      @type_of_account.attributes = type_of_account_attributes
-      @type_of_account.save!
-      @account.type_of_account_id = @type_of_account.id
-      @account.should be_valid
+    it "all attributes correct" do
+      account = Account.spawn
+      assert_nothing_raised do
+        account.save!
+      end
+      account.should be_valid
     end
 
-    it "with different name" do
-      @account.attributes = account_attributes
-      @account.name = "account_2"
-      @type_of_account.attributes = type_of_account_attributes
-      @type_of_account.save!
-      @account.type_of_account_id = @type_of_account.id
-      @account.should be_valid
+    it "account names unique" do
+      account = Account.generate!(:name => "account duplicate")
+      account_not_dup = Account.spawn(:name => "account not duplicate")
+      assert_nothing_raised do
+        account_not_dup.save!
+      end
+      account_not_dup.should be_valid
     end
   end
 
@@ -127,16 +109,20 @@ describe "Account" do
 
   context "#destroy" do
     before(:each) do
-      @account_1 = Account.generate!
-      @posting_1 = @account_1.postings.build(:amount => 2.00)
-      @posting_1.journal_id = 123
-      @posting_1.type_of_asset_id = 321
-      @posting_1.save!
+      @account = Account.generate!
+      @posting = Posting.generate!(:account_id => @account.id)
     end
 
-    it "not orphan postings" do
+    it "should not orphan postings" do
       assert_raises Account::OrphanPostings do
-        @account_1.destroy
+        @account.destroy
+      end
+    end
+
+    it "should destroy if doing so does not orphan postings" do
+      @posting.destroy
+      assert_nothing_raised do
+        @account.destroy
       end
     end
   end
@@ -161,28 +147,17 @@ describe "Account" do
 
   context "#all_postings" do
     before(:each) do
-      @journal1 = Journal.generate!(:description => "funding1")
-      @journal2 = Journal.generate!(:description => "funding2")
-      @account_1 = Account.generate!(:name => "account 1")
-      @account_2 = Account.generate!(:name => "account 2")
-      @account_3 = Account.generate!(:name => "account 3")
-      @posting_1 = Posting.generate!(:amount => 1.11)
-      @posting_2 = Posting.generate!(:amount => -1.11)
-      @posting_3 = Posting.generate!(:amount => 3.33)
-      @posting_4 = Posting.generate!(:amount => -3.33)
-
-      @journal1.postings << @posting_1
-      @journal1.postings << @posting_2
-      @journal2.postings << @posting_3
-      @journal2.postings << @posting_4
-
-      @account_1.postings << @posting_1
-      @account_2.postings << @posting_2
-      @account_3.postings << @posting_3
-      @account_3.postings << @posting_4
+      @account_1 = Account.spawn(:name => "account 1")
+      @account_2 = Account.spawn(:name => "account 2")
+      @account_3 = Account.spawn(:name => "account 3")
       @account_3.parent = @account_2
       @account_2.parent = @account_1
       [@account_1, @account_2, @account_3].each(&:save!)
+
+      @posting_1 = Posting.generate!(:amount =>  1.11, :account_id => @account_1.id)
+      @posting_2 = Posting.generate!(:amount => -1.11, :account_id => @account_2.id)
+      @posting_3 = Posting.generate!(:amount =>  3.33, :account_id => @account_3.id)
+      @posting_4 = Posting.generate!(:amount => -3.33, :account_id => @account_3.id)
     end
 
     it "return array of postings from self and children" do

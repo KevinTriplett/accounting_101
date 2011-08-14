@@ -1,6 +1,6 @@
 class BalancedValidator < ActiveModel::EachValidator
   def validate_each(record, attribute, value)
-    record.errors[attribute] << "must sum to zero" unless record.balanced?
+    record.errors[attribute] << "must balance (sum to zero)" unless record.balanced?
   end
 end
 
@@ -24,7 +24,25 @@ class Journal < ActiveRecord::Base
     journal.save!
   end
 
+  def postings_with_account_type
+    postings
+      .joins('INNER JOIN accounts ON accounts.id = postings.account_id')
+      .joins('INNER JOIN type_of_accounts ON type_of_accounts.id = accounts.type_of_account_id')
+  end
+
+  def debit_accounts_total
+    postings_with_account_type
+      .where('type_of_accounts.debit <> 0')
+      .sum('postings.amount')
+  end
+
+  def credit_accounts_total
+    postings_with_account_type
+      .where('type_of_accounts.debit = 0')
+      .sum('postings.amount')
+  end
+
   def balanced?
-    0 == postings.inject(0) {|sum, posting| sum += posting.amount}
+    debit_accounts_total == credit_accounts_total
   end
 end
